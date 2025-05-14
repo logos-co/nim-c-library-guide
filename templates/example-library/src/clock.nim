@@ -6,7 +6,7 @@ type
   AppCallbacks* = ref object
     alarmEventCb*: ClockAlarmCallback
 
-  Alarm* = ref object # Fixed missing '=' after Alarm*
+  Alarm* = ref object
     time: Moment
     msg: string
 
