@@ -3,7 +3,7 @@
 {.passc: "-fPIC".}
 
 when defined(linux):
-  {.passl: "-Wl,-soname,libsds.so".}
+  {.passl: "-Wl,-soname,libvcache.so".}
 
 import std/[locks, typetraits, tables, atomics], chronos
 import
@@ -23,7 +23,7 @@ import
 ################################################################################
 ### Not-exported components
 
-template checkLibexampleParams*(
+template checkLibvcacheParams*(
     ctx: ptr VCacheContext, callback: VCacheCallBack, userData: pointer
 ) =
   ctx[].userData = userData
@@ -61,8 +61,8 @@ proc handleRequest(
     callback: VCacheCallBack,
     userData: pointer,
 ): cint =
-  sds_thread.sendRequestToSdsThread(ctx, requestType, content, callback, userData).isOkOr:
-    let msg = "libsds error: " & $error
+  vcache_thread.sendRequestToSdsThread(ctx, requestType, content, callback, userData).isOkOr:
+    let msg = "libvcache error: " & $error
     callback(RET_ERR, unsafeAddr msg[0], cast[csize_t](len(msg)), userData)
     return RET_ERR
 
@@ -81,7 +81,7 @@ proc onMessageReady(ctx: ptr VCacheContext): MessageReadyCallback =
 
 # Every Nim library must have this function called - the name is derived from
 # the `--nimMainPrefix` command line option
-proc libexampleNimMain() {.importc.}
+proc libvcacheNimMain() {.importc.}
 
 # To control when the library has been initialized
 var initialized: Atomic[bool]
@@ -98,7 +98,7 @@ proc initializeLibrary() {.exported.} =
   if not initialized.exchange(true):
     ## Every Nim library needs to call `<yourprefix>NimMain` once exactly, to initialize the Nim runtime.
     ## Being `<yourprefix>` the value given in the optional compilation flag --nimMainPrefix:yourprefix
-    libexampleNimMain()
+    libvcacheNimMain()
   when declared(setupForeignThreadGc):
     setupForeignThreadGc()
   when declared(nimGC_setStackBottom):
