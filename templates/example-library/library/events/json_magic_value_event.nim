@@ -8,7 +8,7 @@
 # 1. Rename this file to `json_<your_event_name>_event.nim`
 # 2. Rename the type to `Json<YourEventName>Event`
 # 3. Update the fields to match your event's data structure
-# 4. Modify the constructor to handle your event's specific parameters
+# 4. Modify the new() procedure to handle your event's specific parameters
 # 5. Implement the required `$` method
 #
 # See additional TODO comments throughout the file for specific guidance.
@@ -18,16 +18,16 @@ import ./json_base_event
 
 # TODO: change the type name to `Json<YourEventName>Event`
 # TODO: update the fields to match your event's data
-type JsonExampleEvent* = ref object of JsonEvent
-  exampleStr*: string
-  exampleSeq: seq[string]
+type JsonMagicValueEvent* = ref object of JsonEvent
+  magicValue: int
+  magicSeq: seq[int]
 
 # TODO: change new() procedure to match your event type and its parameters
-proc new*(T: type JsonExampleEvent, exampleStr: string, exampleSeq: seq[string]): T =
-  return JsonExampleEvent(
-    eventType: "example", exampleStr: exampleStr, exampleSeq: exampleSeq
+proc new*(T: type JsonMagicValueEvent, magicValue: int, magicSeq: seq[int]): T =
+  return JsonMagicValueEvent(
+    eventType: "magic_value", magicValue: magicValue, magicSeq: magicSeq
   )
 
 # TODO: Use your event type
-method `$`*(jsonExample: JsonExampleEvent): string =
-  $(%*jsonExample)
+method `$`*(magicValueEvent: JsonMagicValueEvent): string =
+  $(%*magicValueEvent)
