@@ -1,7 +1,7 @@
 .DS_Store
 nph
 build/*
-vcache.nims
+clock.nims
 /.update.timestamp
 
 # Nimbus Build System

@@ -1,4 +1,4 @@
-.PHONY: libvcache
+.PHONY: libclock
 
 export BUILD_SYSTEM_DIR := vendor/nimbus-build-system
 # we don't want an error here, so we can handle things later, in the ".DEFAULT" target
@@ -20,32 +20,32 @@ GIT_SUBMODULE_UPDATE := git submodule update --init --recursive
 else # "variables.mk" was included. Business as usual until the end of this file.
 
 # default target, because it's the first one that doesn't start with '.'
-all: | libvcache
+all: | libclock
 
-vcache.nims:
-	ln -s vcache.nimble $@
+clock.nims:
+	ln -s clock.nimble $@
 
 update: | update-common
-	rm -rf vcache.nims && \
-		$(MAKE) vcache.nims $(HANDLE_OUTPUT)
+	rm -rf clock.nims && \
+		$(MAKE) clock.nims $(HANDLE_OUTPUT)
 
 clean:
 	rm -rf build
 
-deps: | vcache.nims
+deps: | clock.nims
 
 # must be included after the default target
 -include $(BUILD_SYSTEM_DIR)/makefiles/targets.mk
 
 STATIC ?= 0
 
-libvcache: deps
-		rm -f build/libvcache*
+libclock: deps
+		rm -f build/libclock*
 ifeq ($(STATIC), 1)
 		echo -e $(BUILD_MSG) "build/$@.a" && \
-		$(ENV_SCRIPT) nim libvcacheStatic $(NIM_PARAMS) vcache.nims
+		$(ENV_SCRIPT) nim libclockStatic $(NIM_PARAMS) clock.nims
 else
 		echo -e $(BUILD_MSG) "build/$@.so" && \
-		$(ENV_SCRIPT) nim libvcacheDynamic $(NIM_PARAMS) vcache.nims
+		$(ENV_SCRIPT) nim libclockDynamic $(NIM_PARAMS) clock.nims
 endif
 endif

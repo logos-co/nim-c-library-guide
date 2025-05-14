@@ -18,16 +18,14 @@ import ./json_base_event
 
 # TODO: change the type name to `Json<YourEventName>Event`
 # TODO: update the fields to match your event's data
-type JsonMagicValueEvent* = ref object of JsonEvent
-  magicValue: int
-  magicSeq: seq[int]
+type JsonAlarmEvent* = ref object of JsonEvent
+  time: int
+  msg: string
 
 # TODO: change new() procedure to match your event type and its parameters
-proc new*(T: type JsonMagicValueEvent, magicValue: int, magicSeq: seq[int]): T =
-  return JsonMagicValueEvent(
-    eventType: "magic_value", magicValue: magicValue, magicSeq: magicSeq
-  )
+proc new*(T: type JsonAlarmEvent, time: int, msg: string): T =
+  return JsonAlarmEvent(eventType: "clock_alarm", time: time, msg: msg)
 
 # TODO: Use your event type
-method `$`*(magicValueEvent: JsonMagicValueEvent): string =
-  $(%*magicValueEvent)
+method `$`*(alarmEvent: JsonAlarmEvent): string =
+  $(%*alarmEvent)

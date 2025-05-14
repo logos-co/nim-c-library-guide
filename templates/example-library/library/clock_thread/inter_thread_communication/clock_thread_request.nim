@@ -1,27 +1,25 @@
 ## This file contains the base message request type that will be handled.
 ## The requests are created by the main thread and processed by
-## the VCache Thread.
+## the Clock Thread.
 
 import std/json, results
 import chronos, chronos/threadsync
-import ../../ffi_types, ./requests/[vcache_lifecycle_request, vcache_value_request]
+import ../../ffi_types, ./requests/[clock_lifecycle_request]
 
 type RequestType* {.pure.} = enum
   LIFECYCLE
-  MESSAGE
-  DEPENDENCIES
 
-type VCacheThreadRequest* = object
+type ClockThreadRequest* = object
   reqType: RequestType
   reqContent: pointer
-  callback: VCacheCallBack
+  callback: ClockCallBack
   userData: pointer
 
 proc createShared*(
-    T: type VCacheThreadRequest,
+    T: type ClockThreadRequest,
     reqType: RequestType,
     reqContent: pointer,
-    callback: VCacheCallBack,
+    callback: ClockCallBack,
     userData: pointer,
 ): ptr type T =
   var ret = createShared(T)
@@ -32,7 +30,7 @@ proc createShared*(
   return ret
 
 proc handleRes[T: string | void](
-    res: Result[T, string], request: ptr VCacheThreadRequest
+    res: Result[T, string], request: ptr ClockThreadRequest
 ) =
   ## Handles the Result responses, which can either be Result[string, string] or
   ## Result[void, string].
@@ -42,7 +40,7 @@ proc handleRes[T: string | void](
 
   if res.isErr():
     foreignThreadGc:
-      let msg = "libvcache error: handleRes fireSyncRes error: " & $res.error
+      let msg = "libclock error: handleRes fireSyncRes error: " & $res.error
       request[].callback(
         RET_ERR, unsafeAddr msg[0], cast[csize_t](len(msg)), request[].userData
       )
@@ -58,18 +56,14 @@ proc handleRes[T: string | void](
   return
 
 proc process*(
-    T: type VCacheThreadRequest,
-    request: ptr VCacheThreadRequest,
-    rm: ptr ReliabilityManager,
+    T: type ClockThreadRequest, request: ptr ClockThreadRequest, clock: ptr Clock
 ) {.async.} =
   let retFut =
     case request[].reqType
     of LIFECYCLE:
-      cast[ptr VCacheLifecycleRequest](request[].reqContent).process(rm)
-    of VALUE:
-      cast[ptr VCacheValueRequest](request[].reqContent).process(rm)
+      cast[ptr ClockLifecycleRequest](request[].reqContent).process(rm)
 
   handleRes(await retFut, request)
 
-proc `$`*(self: VCacheThreadRequest): string =
+proc `$`*(self: ClockThreadRequest): string =
   return $self.reqType

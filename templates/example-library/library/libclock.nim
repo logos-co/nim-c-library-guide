@@ -3,17 +3,17 @@
 {.passc: "-fPIC".}
 
 when defined(linux):
-  {.passl: "-Wl,-soname,libvcache.so".}
+  {.passl: "-Wl,-soname,libclock.so".}
 
 import std/[locks, typetraits, tables, atomics], chronos
 import
-  ./vcache_thread/vcache_thread,
+  ./clock_thread/clock_thread,
   ./alloc,
   ./ffi_types,
-  ./vcache_thread/inter_thread_communication/vcache_thread_request,
-  ./vcache_thread/inter_thread_communication/requests/
-    [vcache_lifecycle_request, vcache_value_request],
-  ../src/[vcache],
+  ./clock_thread/inter_thread_communication/clock_thread_request,
+  ./clock_thread/inter_thread_communication/requests/
+    [clock_lifecycle_request, clock_value_request],
+  ../src/[clock],
   ./events/[json_magic_value_event]
 
 ################################################################################
@@ -23,15 +23,15 @@ import
 ################################################################################
 ### Not-exported components
 
-template checkLibvcacheParams*(
-    ctx: ptr VCacheContext, callback: VCacheCallBack, userData: pointer
+template checkLibclockParams*(
+    ctx: ptr ClockContext, callback: ClockCallBack, userData: pointer
 ) =
   ctx[].userData = userData
 
   if isNil(callback):
     return RET_MISSING_CALLBACK
 
-template callEventCallback(ctx: ptr VCacheContext, eventName: string, body: untyped) =
+template callEventCallback(ctx: ptr ClockContext, eventName: string, body: untyped) =
   if isNil(ctx[].eventCallback):
     error eventName & " - eventCallback is nil"
     return
@@ -43,32 +43,32 @@ template callEventCallback(ctx: ptr VCacheContext, eventName: string, body: unty
   foreignThreadGc:
     try:
       let event = body
-      cast[VCacheCallBack](ctx[].eventCallback)(
+      cast[ClockCallBack](ctx[].eventCallback)(
         RET_OK, unsafeAddr event[0], cast[csize_t](len(event)), ctx[].eventUserData
       )
     except Exception, CatchableError:
       let msg =
         "Exception " & eventName & " when calling 'eventCallBack': " &
         getCurrentExceptionMsg()
-      cast[VCacheCallBack](ctx[].eventCallback)(
+      cast[ClockCallBack](ctx[].eventCallback)(
         RET_ERR, unsafeAddr msg[0], cast[csize_t](len(msg)), ctx[].eventUserData
       )
 
 proc handleRequest(
-    ctx: ptr VCacheContext,
+    ctx: ptr ClockContext,
     requestType: RequestType,
     content: pointer,
-    callback: VCacheCallBack,
+    callback: ClockCallBack,
     userData: pointer,
 ): cint =
-  vcache_thread.sendRequestToSdsThread(ctx, requestType, content, callback, userData).isOkOr:
-    let msg = "libvcache error: " & $error
+  clock_thread.sendRequestToSdsThread(ctx, requestType, content, callback, userData).isOkOr:
+    let msg = "libclock error: " & $error
     callback(RET_ERR, unsafeAddr msg[0], cast[csize_t](len(msg)), userData)
     return RET_ERR
 
   return RET_OK
 
-proc onMessageReady(ctx: ptr VCacheContext): MessageReadyCallback =
+proc onMessageReady(ctx: ptr ClockContext): MessageReadyCallback =
   return proc(messageId: MessageID) {.gcsafe.} =
     callEventCallback(ctx, "onMessageReady"):
       $JsonMessageReadyEvent.new(messageId)
@@ -81,7 +81,7 @@ proc onMessageReady(ctx: ptr VCacheContext): MessageReadyCallback =
 
 # Every Nim library must have this function called - the name is derived from
 # the `--nimMainPrefix` command line option
-proc libvcacheNimMain() {.importc.}
+proc libclockNimMain() {.importc.}
 
 # To control when the library has been initialized
 var initialized: Atomic[bool]
@@ -98,7 +98,7 @@ proc initializeLibrary() {.exported.} =
   if not initialized.exchange(true):
     ## Every Nim library needs to call `<yourprefix>NimMain` once exactly, to initialize the Nim runtime.
     ## Being `<yourprefix>` the value given in the optional compilation flag --nimMainPrefix:yourprefix
-    libvcacheNimMain()
+    libclockNimMain()
   when declared(setupForeignThreadGc):
     setupForeignThreadGc()
   when declared(nimGC_setStackBottom):
@@ -113,7 +113,7 @@ proc initializeLibrary() {.exported.} =
 ### Exported procs
 
 proc SetEventCallback(
-    ctx: ptr VCacheContext, callback: VCacheCallBack, userData: pointer
+    ctx: ptr ClockContext, callback: ClockCallBack, userData: pointer
 ) {.dynlib, exportc.} =
   initializeLibrary()
   ctx[].eventCallback = cast[pointer](callback)

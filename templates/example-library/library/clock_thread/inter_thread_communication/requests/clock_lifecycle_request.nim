@@ -2,19 +2,19 @@ import std/[options, json, strutils, net]
 import chronos, chronicles, results, confutils, confutils/std/net
 
 import ../../../alloc
-import ../../../../src/[vcache]
+import ../../../../src/[clock]
 
-type VCacheLifecycleMsgType* = enum
-  CREATE_VCACHE
+type ClockLifecycleMsgType* = enum
+  CREATE_CLOCK
 
-type VCacheLifecycleRequest* = object
-  operation: VCacheLifecycleMsgType
+type ClockLifecycleRequest* = object
+  operation: ClockLifecycleMsgType
   channelId: cstring
   appCallbacks: AppCallbacks
 
 proc createShared*(
-    T: type VCacheLifecycleRequest,
-    op: VCacheLifecycleMsgType,
+    T: type ClockLifecycleRequest,
+    op: ClockLifecycleMsgType,
     channelId: cstring = "",
     appCallbacks: AppCallbacks = nil,
 ): ptr type T =
@@ -24,7 +24,7 @@ proc createShared*(
   ret[].channelId = channelId.alloc()
   return ret
 
-proc destroyShared(self: ptr VCacheLifecycleRequest) =
+proc destroyShared(self: ptr ClockLifecycleRequest) =
   deallocShared(self[].channelId)
   deallocShared(self)
 
@@ -48,7 +48,7 @@ proc createReliabilityManager(
   return ok(rm)
 
 proc process*(
-    self: ptr VCacheLifecycleRequest, rm: ptr ReliabilityManager
+    self: ptr ClockLifecycleRequest, clock: ptr Clock
 ): Future[Result[string, string]] {.async.} =
   defer:
     destroyShared(self)

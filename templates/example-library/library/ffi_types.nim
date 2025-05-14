@@ -6,7 +6,7 @@
 ################################################################################
 ### Exported types
 
-type VCacheCallBack* = proc(
+type ClockCallBack* = proc(
   callerRet: cint, msg: ptr cchar, len: csize_t, userData: pointer
 ) {.cdecl, gcsafe, raises: [].}
 
