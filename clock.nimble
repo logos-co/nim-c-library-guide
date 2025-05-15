@@ -1,9 +1,9 @@
 # Package
-version       = "0.1.0"
-author        = "IFT"
-description   = "Clock Library Example"
-license       = "MIT"
-srcDir        = "src"
+version = "0.1.0"
+author = "IFT"
+description = "Clock Library Example"
+license = "MIT"
+srcDir = "src"
 
 # Dependencies
 requires "nim >= 2.0.8"
@@ -18,17 +18,14 @@ proc buildLibrary(name: string, srcDir = "./", params = "", `type` = "static") =
     extra_params &= " " & paramStr(i)
   if `type` == "static":
     exec "nim c" & " --out:build/" & name &
-      ".a --threads:on --app:staticlib --opt:size --noMain --mm:refc --header --undef:metrics --nimMainPrefix:libclock --skipParentCfg:on " &
+      ".a --threads:on --app:staticlib --opt:size --noMain --mm:refc --header --undef:metrics --nimMainPrefix:libclock --skipParentCfg:on --nimcache:nimcache " &
       extra_params & " " & srcDir & name & ".nim"
   else:
     exec "nim c" & " --out:build/" & name &
-      ".so --threads:on --app:lib --opt:size --noMain --mm:refc --header --undef:metrics --nimMainPrefix:libclock --skipParentCfg:on " &
+      ".so --threads:on --app:lib --opt:size --noMain --mm:refc --header --undef:metrics --nimMainPrefix:libclock --skipParentCfg:on --nimcache:nimcache " &
       extra_params & " " & srcDir & name & ".nim"
 
 # Tasks
 task libclockDynamic, "Generate bindings":
   let name = "libclock"
-  buildLibrary name,
-    "library/",
-    "",
-    "dynamic"
+  buildLibrary name, "library/", "", "dynamic"

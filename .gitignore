@@ -8,3 +8,4 @@ nimbus-build-system.paths
 
 # Nimble packages
 /vendor/.nimble
+nimcache
