@@ -1,3 +1,0 @@
-[submodule "vendor/nimbus-build-system"]
-	ignore = untracked
-	branch = master
