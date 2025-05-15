@@ -5,7 +5,7 @@
 when defined(linux):
   {.passl: "-Wl,-soname,libclock.so".}
 
-import std/[locks, typetraits, tables, atomics], chronos
+import std/[locks, typetraits, tables, atomics], chronos, chronicles
 import
   ./clock_thread/clock_thread,
   ./alloc,
@@ -68,10 +68,10 @@ proc handleRequest(
 
   return RET_OK
 
-proc onMessageReady(ctx: ptr ClockContext): MessageReadyCallback =
-  return proc(messageId: MessageID) {.gcsafe.} =
-    callEventCallback(ctx, "onMessageReady"):
-      $JsonMessageReadyEvent.new(messageId)
+proc onAlarm(ctx: ptr ClockContext): ClockAlarmCallback =
+  return proc(time: Moment, msg: string) {.gcsafe.} =
+    callEventCallback(ctx, "onAlarm"):
+      $JsonAlarmEvent.new(time, msg)
 
 ### End of not-exported components
 ################################################################################

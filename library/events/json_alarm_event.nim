@@ -13,17 +13,17 @@
 #
 # See additional TODO comments throughout the file for specific guidance.
 
-import std/json
+import std/json, chronos
 import ./json_base_event
 
 # TODO: change the type name to `Json<YourEventName>Event`
 # TODO: update the fields to match your event's data
 type JsonAlarmEvent* = ref object of JsonEvent
-  time: int
+  time: Moment
   msg: string
 
 # TODO: change new() procedure to match your event type and its parameters
-proc new*(T: type JsonAlarmEvent, time: int, msg: string): T =
+proc new*(T: type JsonAlarmEvent, time: Moment, msg: string): T =
   return JsonAlarmEvent(eventType: "clock_alarm", time: time, msg: msg)
 
 # TODO: Use your event type

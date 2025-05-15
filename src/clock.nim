@@ -1,7 +1,7 @@
 import chronos, std/json, chronicles
 
 type
-  ClockAlarmCallback* = proc(time: int, msg: string) {.gcsafe.}
+  ClockAlarmCallback* = proc(time: Moment, msg: string) {.gcsafe.}
 
   AppCallbacks* = ref object
     alarmEventCb*: ClockAlarmCallback
@@ -24,14 +24,15 @@ proc getAlarms*(clock: Clock): seq[Alarm] =
   return clock.alarms
 
 proc setAlarm*(clock: Clock, timeMillis: int, msg: string) =
-  let newAlarm = Alarm(time: Moment.fromNow(milliseconds(timeMillis)), msg: msg)
+  let time = Moment.fromNow(milliseconds(timeMillis))
+  let newAlarm = Alarm(time: time, msg: msg)
 
   clock.alarms.add(newAlarm) # Add alarm to the clock's alarms sequence
 
   proc onAlarm(udata: pointer) {.gcsafe.} =
     try:
       if not isNil(clock.appCallbacks) and not isNil(clock.appCallbacks.alarmEventCb):
-        clock.appCallbacks.alarmEventCb(timeMillis.int, newAlarm.msg)
+        clock.appCallbacks.alarmEventCb(time, newAlarm.msg)
     except Exception:
       error "Exception calling alarmEventCb", error = getCurrentExceptionMsg()
 
