@@ -1,6 +1,0 @@
-[submodule "templates/example-library/vendor/nimbus-build-system"]
-	path = templates/example-library/vendor/nimbus-build-system
-	url = https://github.com/status-im/nimbus-build-system.git
-[submodule "templates/example-library/vendor/nim-chronos"]
-	path = templates/example-library/vendor/nim-chronos
-	url = https://github.com/status-im/nim-chronos.git
