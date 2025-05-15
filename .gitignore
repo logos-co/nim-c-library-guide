@@ -1,0 +1,10 @@
+.DS_Store
+nph
+build/*
+/.update.timestamp
+
+# Nimbus Build System
+nimbus-build-system.paths
+
+# Nimble packages
+/vendor/.nimble
