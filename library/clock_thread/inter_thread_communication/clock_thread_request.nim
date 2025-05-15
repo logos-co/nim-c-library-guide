@@ -4,10 +4,14 @@
 
 import std/json, results
 import chronos, chronos/threadsync
-import ../../ffi_types, ./requests/[clock_lifecycle_request], ../../../src/clock
+import
+  ../../ffi_types,
+  ./requests/[clock_lifecycle_request, clock_alarm_request],
+  ../../../src/clock
 
 type RequestType* {.pure.} = enum
   LIFECYCLE
+  ALARM
 
 type ClockThreadRequest* = object
   reqType: RequestType
@@ -60,8 +64,10 @@ proc process*(
 ) {.async.} =
   let retFut =
     case request[].reqType
-    of LIFECYCLE:
+    of RequestType.LIFECYCLE:
       cast[ptr ClockLifecycleRequest](request[].reqContent).process(clock)
+    of RequestType.ALARM:
+      cast[ptr ClockAlarmRequest](request[].reqContent).process(clock)
 
   handleRes(await retFut, request)
 

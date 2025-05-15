@@ -112,12 +112,77 @@ proc initializeLibrary() {.exported.} =
 ################################################################################
 ### Exported procs
 
-proc SetEventCallback(
+proc clock_new(
+    callback: ClockCallback, userData: pointer
+): pointer {.dynlib, exportc, cdecl.} =
+  initializeLibrary()
+
+  ## Creates a new instance of the Clock.
+  if isNil(callback):
+    echo "error: missing callback in clock_new"
+    return nil
+
+  ## Create the Clock thread that will keep waiting for req from the main thread.
+  var ctx = clock_thread.createClockThread().valueOr:
+    let msg = "Error in createClockThread: " & $error
+    callback(RET_ERR, unsafeAddr msg[0], cast[csize_t](len(msg)), userData)
+    return nil
+
+  ctx.userData = userData
+
+  let appCallbacks = AppCallbacks(alarmHandler: onAlarm(ctx))
+
+  let retCode = handleRequest(
+    ctx,
+    RequestType.LIFECYCLE,
+    ClockLifecycleRequest.createShared(ClockLifecycleMsgType.CREATE_CLOCK, appCallbacks),
+    callback,
+    userData,
+  )
+
+  if retCode == RET_ERR:
+    return nil
+
+  return ctx
+
+proc clock_set_event_callback(
     ctx: ptr ClockContext, callback: ClockCallBack, userData: pointer
 ) {.dynlib, exportc.} =
   initializeLibrary()
   ctx[].eventCallback = cast[pointer](callback)
   ctx[].eventUserData = userData
+
+proc clock_set_alarm(
+    ctx: ptr ClockContext,
+    timeMillis: cint,
+    alarmMsg: cstring,
+    callback: ClockCallBack,
+    userData: pointer,
+): cint {.dynlib, exportc.} =
+  initializeLibrary()
+  checkLibclockParams(ctx, callback, userData)
+
+  handleRequest(
+    ctx,
+    RequestType.ALARM,
+    ClockAlarmRequest.createShared(ClockAlarmMsgType.LIST_ALARMS, timeMillis, alarmMsg),
+    callback,
+    userData,
+  )
+
+proc clock_list_alarms(
+    ctx: ptr ClockContext, callback: ClockCallBack, userData: pointer
+): cint {.dynlib, exportc.} =
+  initializeLibrary()
+  checkLibclockParams(ctx, callback, userData)
+
+  handleRequest(
+    ctx,
+    RequestType.ALARM,
+    ClockAlarmRequest.createShared(ClockAlarmMsgType.LIST_ALARMS),
+    callback,
+    userData,
+  )
 
 ### End of exported procs
 ################################################################################

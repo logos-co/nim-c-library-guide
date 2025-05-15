@@ -4,7 +4,7 @@ type
   ClockAlarmCallback* = proc(time: Moment, msg: string) {.gcsafe.}
 
   AppCallbacks* = ref object
-    alarmEventCb*: ClockAlarmCallback
+    alarmHandler*: ClockAlarmCallback
 
   Alarm* = ref object
     time: Moment
@@ -31,10 +31,10 @@ proc setAlarm*(clock: Clock, timeMillis: int, msg: string) =
 
   proc onAlarm(udata: pointer) {.gcsafe.} =
     try:
-      if not isNil(clock.appCallbacks) and not isNil(clock.appCallbacks.alarmEventCb):
-        clock.appCallbacks.alarmEventCb(time, newAlarm.msg)
+      if not isNil(clock.appCallbacks) and not isNil(clock.appCallbacks.alarmHandler):
+        clock.appCallbacks.alarmHandler(time, newAlarm.msg)
     except Exception:
-      error "Exception calling alarmEventCb", error = getCurrentExceptionMsg()
+      error "Exception calling alarmHandler", error = getCurrentExceptionMsg()
 
     for index, alarm in clock.alarms:
       if alarm.time == newAlarm.time:

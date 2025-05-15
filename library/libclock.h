@@ -38,9 +38,7 @@ typedef void (*ClockCallBack) (int callerRet, const char* msg, size_t len, void*
 
 // TODO: replace the clock functions for your library's functions
 // TODO: replace the ClockCallBack parameter for <YourLibraryName>Callback
-void* clock_new(
-             const char* configJson,
-             ClockCallBack callback,
+void* clock_new(ClockCallBack callback,
              void* userData);
 
 int clock_destroy(void* ctx,
@@ -50,6 +48,16 @@ int clock_destroy(void* ctx,
 void clock_set_event_callback(void* ctx,
                              ClockCallBack callback,
                              void* userData);
+
+int clock_set_alarm(void* ctx,
+                    int timeMillis,
+                    const char* alarmMsg,
+                    ClockCallBack callback,
+                    void* userData);
+
+int clock_list_alarms(void* ctx,
+                    ClockCallBack callback,
+                    void* userData);
 
 #ifdef __cplusplus
 }

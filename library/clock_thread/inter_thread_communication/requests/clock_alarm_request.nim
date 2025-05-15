@@ -5,7 +5,7 @@ import ../../../alloc
 import ../../../../src/clock
 
 type ClockAlarmMsgType* = enum
-  CREATE_ALARM
+  SET_ALARM
   LIST_ALARMS
 
 type ClockAlarmRequest* = object
@@ -16,8 +16,8 @@ type ClockAlarmRequest* = object
 proc createShared*(
     T: type ClockAlarmRequest,
     op: ClockAlarmMsgType,
-    timeMillis: cint,
-    alarmMsg: cstring,
+    timeMillis: cint = 0,
+    alarmMsg: cstring = "",
 ): ptr type T =
   var ret = createShared(T)
   ret[].operation = op
@@ -37,7 +37,7 @@ proc process*(
     destroyShared(self)
 
   case self.operation
-  of CREATE_ALARM:
+  of SET_ALARM:
     clock[].setAlarm(int(self.timeMillis), $self.alarmMsg)
   of LIST_ALARMS:
     return ok($clock[].getAlarms())
