@@ -14,13 +14,13 @@ type
     alarms: seq[Alarm]
     appCallbacks: AppCallbacks
 
-proc `$`(alarm: Alarm): string =
+proc `$`*(alarm: Alarm): string =
   $(%*alarm)
 
 proc new*(T: type Clock, appCallbacks: AppCallbacks): T =
   return Clock(alarms: newSeq[Alarm](), appCallbacks: appCallbacks)
 
-proc getAlarms(clock: Clock): seq[Alarm] =
+proc getAlarms*(clock: Clock): seq[Alarm] =
   return clock.alarms
 
 proc setAlarm*(clock: Clock, timeMillis: int, msg: string) =

@@ -2,50 +2,27 @@ import std/[options, json, strutils, net]
 import chronos, chronicles, results, confutils, confutils/std/net
 
 import ../../../alloc
-import ../../../../src/[clock]
+import ../../../../src/clock
 
 type ClockLifecycleMsgType* = enum
   CREATE_CLOCK
 
 type ClockLifecycleRequest* = object
   operation: ClockLifecycleMsgType
-  channelId: cstring
   appCallbacks: AppCallbacks
 
 proc createShared*(
     T: type ClockLifecycleRequest,
     op: ClockLifecycleMsgType,
-    channelId: cstring = "",
     appCallbacks: AppCallbacks = nil,
 ): ptr type T =
   var ret = createShared(T)
   ret[].operation = op
   ret[].appCallbacks = appCallbacks
-  ret[].channelId = channelId.alloc()
   return ret
 
 proc destroyShared(self: ptr ClockLifecycleRequest) =
-  deallocShared(self[].channelId)
   deallocShared(self)
-
-proc createReliabilityManager(
-    channelIdCStr: cstring, appCallbacks: AppCallbacks = nil
-): Future[Result[ReliabilityManager, string]] {.async.} =
-  let channelId = $channelIdCStr
-  if channelId.len == 0:
-    error "Failed creating ReliabilityManager: Channel ID cannot be empty"
-    return err("Failed creating ReliabilityManager: Channel ID cannot be empty")
-
-  let rm = newReliabilityManager(channelId).valueOr:
-    error "Failed creating reliability manager", error = error
-    return err("Failed creating reliability manager: " & $error)
-
-  rm.setCallbacks(
-    appCallbacks.messageReadyCb, appCallbacks.messageSentCb,
-    appCallbacks.missingDependenciesCb, appCallbacks.periodicSyncCb,
-  )
-
-  return ok(rm)
 
 proc process*(
     self: ptr ClockLifecycleRequest, clock: ptr Clock
@@ -54,15 +31,7 @@ proc process*(
     destroyShared(self)
 
   case self.operation
-  of CREATE_RELIABILITY_MANAGER:
-    rm[] = (await createReliabilityManager(self.channelId, self.appCallbacks)).valueOr:
-      error "CREATE_RELIABILITY_MANAGER failed", error = error
-      return err("error processing CREATE_RELIABILITY_MANAGER request: " & $error)
-  of RESET_RELIABILITY_MANAGER:
-    resetReliabilityManager(rm[]).isOkOr:
-      error "RESET_RELIABILITY_MANAGER failed", error = error
-      return err("error processing RESET_RELIABILITY_MANAGER request: " & $error)
-  of START_PERIODIC_TASKS:
-    rm[].startPeriodicTasks()
+  of CREATE_CLOCK:
+    clock[] = Clock.new(self.appCallbacks)
 
   return ok("")

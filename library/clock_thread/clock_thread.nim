@@ -4,7 +4,7 @@
 
 import std/[options, atomics, os, net, locks]
 import chronicles, chronos, chronos/threadsync, taskpools/channels_spsc_single, results
-import ../ffi_types, ./inter_thread_communication/clock_thread_request
+import ../ffi_types, ./inter_thread_communication/clock_thread_request, ../../src/clock
 
 type ClockContext* = object
   thread: Thread[(ptr ClockContext)]
@@ -23,7 +23,7 @@ proc runClock(ctx: ptr ClockContext) {.async.} =
   ## This is the worker body. This runs the Clock instance
   ## and attends library user requests (stop, connect_to, etc.)
 
-  var rm: ReliabilityManager
+  var clock: Clock
 
   while true:
     await ctx.reqSignal.wait()
@@ -43,13 +43,13 @@ proc runClock(ctx: ptr ClockContext) {.async.} =
       error "could not fireSync back to requester thread", error = fireRes.error
 
     ## Handle the request
-    asyncSpawn ClockThreadRequest.process(request, addr rm)
+    asyncSpawn ClockThreadRequest.process(request, addr clock)
 
 proc run(ctx: ptr ClockContext) {.thread.} =
   ## Launch clock worker
   waitFor runClock(ctx)
 
-proc createClockThread*(): Result[ptr SdsContext, string] =
+proc createClockThread*(): Result[ptr ClockContext, string] =
   ## This proc is called from the main thread and it creates
   ## the Clock working thread.
   var ctx = createShared(ClockContext, 1)

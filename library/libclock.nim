@@ -12,9 +12,9 @@ import
   ./ffi_types,
   ./clock_thread/inter_thread_communication/clock_thread_request,
   ./clock_thread/inter_thread_communication/requests/
-    [clock_lifecycle_request, clock_value_request],
+    [clock_lifecycle_request, clock_alarm_request],
   ../src/[clock],
-  ./events/[json_magic_value_event]
+  ./events/[json_alarm_event]
 
 ################################################################################
 ### Wrapper around the reliability manager
@@ -61,7 +61,7 @@ proc handleRequest(
     callback: ClockCallBack,
     userData: pointer,
 ): cint =
-  clock_thread.sendRequestToSdsThread(ctx, requestType, content, callback, userData).isOkOr:
+  clock_thread.sendRequestToClockThread(ctx, requestType, content, callback, userData).isOkOr:
     let msg = "libclock error: " & $error
     callback(RET_ERR, unsafeAddr msg[0], cast[csize_t](len(msg)), userData)
     return RET_ERR
