@@ -37,6 +37,12 @@ deps: | clock.nims
 # must be included after the default target
 -include $(BUILD_SYSTEM_DIR)/makefiles/targets.mk
 
+ifeq ($(DEBUG), 0)
+NIM_PARAMS := $(NIM_PARAMS) -d:release
+else
+NIM_PARAMS := $(NIM_PARAMS) -d:debug
+endif
+
 STATIC ?= 0
 
 libclock: deps
