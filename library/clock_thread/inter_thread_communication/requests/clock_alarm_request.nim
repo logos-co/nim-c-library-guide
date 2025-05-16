@@ -1,8 +1,8 @@
 # Thread Request Example Implementation
 #
 # This file defines the `ClockAlarmRequest` type and its lifecycle, including memory
-# management and request processing. This structure is used for communicating with the
-# main thread, which is the one that runs the Clock
+# management and request processing. This structure is used for communicating between
+# the Client and Clock threads
 #
 # IMPLEMENTATION STEPS:
 # 1. Rename this file to `<your_library_name>_<your_request_name>_request.nim`

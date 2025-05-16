@@ -122,7 +122,7 @@ proc clock_new(
     echo "error: missing callback in clock_new"
     return nil
 
-  ## Create the Clock thread that will keep waiting for req from the main thread.
+  ## Create the Clock thread that will keep waiting for req from the Client thread.
   var ctx = clock_thread.createClockThread().valueOr:
     let msg = "Error in createClockThread: " & $error
     callback(RET_ERR, unsafeAddr msg[0], cast[csize_t](len(msg)), userData)
