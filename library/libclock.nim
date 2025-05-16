@@ -1,3 +1,22 @@
+# libclock.nim - C-exported interface for the Clock shared library
+#
+# This file implements the public C API for libclock.
+# It acts as the bridge between C programs and the internal Nim implementation.
+#
+# IMPLEMENTATION STEPS:
+# 1. Rename this file to `lib<your_library_name>.nim`
+# 2. Replace all instances of "clock" with your library name
+# 3. Adapt types, callbacks, and event handling to match your library's needs
+# 4. Replace imports and request types with ones relevant to your library
+# 5. Ensure `lib<YourLibraryName>NimMain()` matches the `--nimMainPrefix` used during compilation
+#
+# This file defines:
+# - Initialization logic for the Nim runtime (once per process)
+# - Thread-safe exported procs callable from C
+# - Callback registration and invocation for asynchronous communication
+#
+# See additional TODO comments throughout the file for specific guidance.
+
 {.pragma: exported, exportc, cdecl, raises: [].}
 {.pragma: callback, cdecl, raises: [], gcsafe.}
 {.passc: "-fPIC".}
@@ -17,12 +36,10 @@ import
   ./events/[json_alarm_event]
 
 ################################################################################
-### Wrapper around the reliability manager
-################################################################################
-
-################################################################################
 ### Not-exported components
+################################################################################
 
+# This template checks common parameters passed to exported functions
 template checkLibclockParams*(
     ctx: ptr ClockContext, callback: ClockCallBack, userData: pointer
 ) =
@@ -31,6 +48,7 @@ template checkLibclockParams*(
   if isNil(callback):
     return RET_MISSING_CALLBACK
 
+# This template invokes the event callback for internal events
 template callEventCallback(ctx: ptr ClockContext, eventName: string, body: untyped) =
   if isNil(ctx[].eventCallback):
     error eventName & " - eventCallback is nil"
@@ -54,6 +72,7 @@ template callEventCallback(ctx: ptr ClockContext, eventName: string, body: untyp
         RET_ERR, unsafeAddr msg[0], cast[csize_t](len(msg)), ctx[].eventUserData
       )
 
+# Sends a request to the worker thread and returns success/failure
 proc handleRequest(
     ctx: ptr ClockContext,
     requestType: RequestType,
@@ -68,6 +87,8 @@ proc handleRequest(
 
   return RET_OK
 
+# Constructs the callback handler used internally by clock for alarms
+# TODO: remove and implement your own event callbacks if needed
 proc onAlarm(ctx: ptr ClockContext): ClockAlarmCallback =
   return proc(time: Moment, msg: string) {.gcsafe.} =
     callEventCallback(ctx, "onAlarm"):
@@ -79,11 +100,11 @@ proc onAlarm(ctx: ptr ClockContext): ClockAlarmCallback =
 ################################################################################
 ### Library setup
 
-# Every Nim library must have this function called - the name is derived from
-# the `--nimMainPrefix` command line option
+# Required for Nim runtime initialization when using --nimMainPrefix
+# TODO: rename to lib<YourLibraryName>NimMain
 proc libclockNimMain() {.importc.}
 
-# To control when the library has been initialized
+# Atomic flag to prevent multiple initializations
 var initialized: Atomic[bool]
 
 if defined(android):
@@ -94,10 +115,10 @@ if defined(android):
     ) {.raises: [].} =
       echo logLevel, msg
 
+# Initializes the Nim runtime and foreign-thread GC
 proc initializeLibrary() {.exported.} =
   if not initialized.exchange(true):
-    ## Every Nim library needs to call `<yourprefix>NimMain` once exactly, to initialize the Nim runtime.
-    ## Being `<yourprefix>` the value given in the optional compilation flag --nimMainPrefix:yourprefix
+    ## Every Nim library must call `<prefix>NimMain()` once
     libclockNimMain()
   when declared(setupForeignThreadGc):
     setupForeignThreadGc()
@@ -112,6 +133,7 @@ proc initializeLibrary() {.exported.} =
 ################################################################################
 ### Exported procs
 
+# Creates a new instance of the library's context
 proc clock_new(
     callback: ClockCallback, userData: pointer
 ): pointer {.dynlib, exportc, cdecl.} =
@@ -145,6 +167,7 @@ proc clock_new(
 
   return ctx
 
+# Sets the callback for receiving asynchronous events
 proc clock_set_event_callback(
     ctx: ptr ClockContext, callback: ClockCallBack, userData: pointer
 ) {.dynlib, exportc.} =
@@ -152,6 +175,7 @@ proc clock_set_event_callback(
   ctx[].eventCallback = cast[pointer](callback)
   ctx[].eventUserData = userData
 
+# Schedules a new alarm
 proc clock_set_alarm(
     ctx: ptr ClockContext,
     timeMillis: cint,
@@ -170,6 +194,7 @@ proc clock_set_alarm(
     userData,
   )
 
+# Requests a list of currently scheduled alarms
 proc clock_list_alarms(
     ctx: ptr ClockContext, callback: ClockCallBack, userData: pointer
 ): cint {.dynlib, exportc.} =
