@@ -206,7 +206,7 @@ proc clock_set_alarm(
   handleRequest(
     ctx,
     RequestType.ALARM,
-    ClockAlarmRequest.createShared(ClockAlarmMsgType.LIST_ALARMS, timeMillis, alarmMsg),
+    ClockAlarmRequest.createShared(ClockAlarmMsgType.SET_ALARM, timeMillis, alarmMsg),
     callback,
     userData,
   )
