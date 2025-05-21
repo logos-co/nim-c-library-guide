@@ -167,6 +167,23 @@ proc clock_new(
 
   return ctx
 
+# Destroys the Clock thread
+proc clock_destroy(
+    ctx: ptr ClockContext, callback: ClockCallBack, userData: pointer
+): cint {.dynlib, exportc.} =
+  initializeLibrary()
+  checkLibclockParams(ctx, callback, userData)
+
+  clock_thread.destroyClockThread(ctx).isOkOr:
+    let msg = "libclock error: " & $error
+    callback(RET_ERR, unsafeAddr msg[0], cast[csize_t](len(msg)), userData)
+    return RET_ERR
+
+  ## always need to invoke the callback although we don't retrieve value to the caller
+  callback(RET_OK, nil, 0, userData)
+
+  return RET_OK
+
 # Sets the callback for receiving asynchronous events
 proc clock_set_event_callback(
     ctx: ptr ClockContext, callback: ClockCallBack, userData: pointer
