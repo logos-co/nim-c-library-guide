@@ -19,7 +19,7 @@
 #
 # See additional TODO comments throughout the file for specific guidance.
 
-import std/[options, json, strutils, net]
+import std/[options, json, strutils, net, sequtils]
 import chronos, chronicles, results, confutils, confutils/std/net
 
 import ../../../alloc
@@ -69,6 +69,7 @@ proc process*(
   of SET_ALARM:
     clock[].setAlarm(int(self.timeMillis), $self.alarmMsg)
   of LIST_ALARMS:
-    return ok($clock[].getAlarms())
+    let alarmStrings = clock[].getAlarms().mapIt($it)
+    return ok($(%*alarmStrings))
 
   return ok("")

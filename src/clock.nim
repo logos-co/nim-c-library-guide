@@ -9,13 +9,20 @@ type
   Alarm* = ref object
     time: Moment
     msg: string
+    createdAt: Moment
 
   Clock* = ref object
     alarms: seq[Alarm]
     appCallbacks: AppCallbacks
 
 proc `$`*(alarm: Alarm): string =
-  $(%*alarm)
+  let jsonNode =
+    %*{
+      "time": alarm.time.epochSeconds(),
+      "msg": alarm.msg,
+      "createdAt": alarm.createdAt.epochSeconds(),
+    }
+  $jsonNode
 
 proc new*(T: type Clock, appCallbacks: AppCallbacks): T =
   return Clock(alarms: newSeq[Alarm](), appCallbacks: appCallbacks)
@@ -25,7 +32,7 @@ proc getAlarms*(clock: Clock): seq[Alarm] =
 
 proc setAlarm*(clock: Clock, timeMillis: int, msg: string) =
   let time = Moment.fromNow(milliseconds(timeMillis))
-  let newAlarm = Alarm(time: time, msg: msg)
+  let newAlarm = Alarm(time: time, msg: msg, createdAt: Moment.now())
 
   clock.alarms.add(newAlarm) # Add alarm to the clock's alarms sequence
 
