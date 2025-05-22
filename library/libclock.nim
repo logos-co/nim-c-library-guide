@@ -92,7 +92,7 @@ proc handleRequest(
 proc onAlarm(ctx: ptr ClockContext): ClockAlarmCallback =
   return proc(time: Moment, msg: string) {.gcsafe.} =
     callEventCallback(ctx, "onAlarm"):
-      $JsonAlarmEvent.new(time, msg)
+      $JsonAlarmEvent.new(time.epochSeconds(), msg)
 
 ### End of not-exported components
 ################################################################################
