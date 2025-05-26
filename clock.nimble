@@ -6,7 +6,7 @@ license = "MIT"
 srcDir = "src"
 
 # Dependencies
-requires "nim >= 2.0.8"
+requires "nim >= 2.2.4"
 requires "chronicles"
 
 proc buildLibrary(name: string, srcDir = "./", params = "", `type` = "static") =
