@@ -1,0 +1,6 @@
+[submodule "templates/nim-library-template"]
+	path = templates/nim-library-template
+	url = https://github.com/logos-co/nim-library-template
+[submodule "templates/bindings/go-bindings-template"]
+	path = templates/bindings/go-bindings-template
+	url = https://github.com/status-im/go-bindings-template
