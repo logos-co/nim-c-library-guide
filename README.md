@@ -9,3 +9,7 @@ To clone all its submodules locally, run the following command in the root direc
 ```
 git submodule update --init --recursive
 ```
+
+### Notes
+
+- A Rust bindings template is planned but not yet ready. In the meantime, please refer to [waku-rust-bindings](https://github.com/waku-org/waku-rust-bindings) as an example for how to implement a Rust wrapper for your library
